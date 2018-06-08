@@ -637,6 +637,7 @@ void ClaspFacade::Statistics::initLevel(uint32 level) {
 	}
 }
 void ClaspFacade::Statistics::addExternal(StatsCallback cb, void* data) {
+	getClingo();
 	sources_.push_back(UserSource(cb, data));
 }
 
