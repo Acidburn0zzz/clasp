@@ -737,6 +737,11 @@ Potassco::AbstractStatistics::Key_t ClaspFacade::Statistics::ClingoView::user() 
 	return user_;
 }
 void ClaspFacade::Statistics::ClingoView::update(const ClaspFacade::Statistics& stats) {
+	const ClaspFacade& f = *stats.self_;
+	if (f.step_.lpStats() && !problem_.find("lp")) {
+		problem_.add("lp", StatisticObject::map(f.step_.lpStats()));
+		if (f.incremental()) { problem_.add("lpStep", StatisticObject::map(f.step_.lpStep())); }
+	}
 	StatsCallbacks sources = stats.external();
 	if (!Potassco::empty(sources)) {
 		user_ = add(root(), "user_defined", Potassco::Statistics_t::Map);
