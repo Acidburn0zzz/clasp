@@ -1122,19 +1122,37 @@ void TextOutput::visitSolverStats(const Clasp::SolverStats& st) {
 	printBR(cat_comment);
 }
 
-void TextOutput::printChildren(const StatisticObject& s, unsigned level) {
+void TextOutput::printChildren(const StatisticObject& s, unsigned level, char const *pre) {
+	unsigned indent = level * 2;
 	for (uint32 i = 0; i != s.size(); ++i) {
 		const char* key = s.type() == Potassco::Statistics_t::Map ? s.key(i) : 0;
 		StatisticObject child = key ? s.at(key) : s[i];
-		if (child.type() == Potassco::Statistics_t::Value) {
-			unsigned indent = level > 1 ? (level - 1) * 2 : 0;
-			if (key) { printf("%s%-*.*s%-*s: %g\n", format[cat_comment], indent, indent, " ", std::max(30 - (int)indent, 0), key, child.value()); }
-			else     { printf("%s%-*.*s[%u]: %g\n", format[cat_comment], indent, indent, " ", i, child.value()); }
+		if (child.type() == Potassco::Statistics_t::Array && key) {
+			printChildren(child, level, key);
 		}
-		else if (child.size()) {
-			unsigned indent = level * 2;
-			if (key) { printf("%s%-*.*s[%s]\n", format[cat_comment], indent, indent, " ", key); }
-			else     { printf("%s%-*.*s[%u]\n", format[cat_comment], indent, indent, " ", i); }
+		else if (child.type() == Potassco::Statistics_t::Value) {
+			printf("%s%-*.*s", format[cat_comment], indent, indent, " ");
+			int align = 13 - (int)indent;
+			if (key) {
+				align -= printf("%s", key);
+			}
+			else if (pre) {
+				align -= printf("[%s %u]", pre, i);
+			}
+			else {
+				align -= printf("[%u]", i);
+			}
+			printf("%-*s: %g\n", std::max(0, align), "", child.value());
+		}
+		else if (child.size() > 0) {
+			printf("%s%-*.*s", format[cat_comment], indent, indent, " ");
+			if (!key) {
+				if (pre) { printf("[%s %u]\n", pre, i); }
+				else     { printf("[%u]\n", i); }
+			}
+			else {
+				printf("%s\n", key);
+			}
 			printChildren(child, level + 1);
 		}
 	}
